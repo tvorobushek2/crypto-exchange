@@ -1,4 +1,4 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.model;
 
 public class CustomerUser extends User {
     private Double walletBalance;

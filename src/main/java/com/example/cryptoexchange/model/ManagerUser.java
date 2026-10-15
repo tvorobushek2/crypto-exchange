@@ -1,4 +1,4 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.model;
 
 public class ManagerUser extends User {
     private String department;

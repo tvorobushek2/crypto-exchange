@@ -1,4 +1,12 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.service;
+
+import com.example.cryptoexchange.model.Order;
+import com.example.cryptoexchange.model.OrderStatus;
+import com.example.cryptoexchange.model.OrderType;
+import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;

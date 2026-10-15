@@ -1,4 +1,4 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.model;
 
 public class Order {
     private Long id;
