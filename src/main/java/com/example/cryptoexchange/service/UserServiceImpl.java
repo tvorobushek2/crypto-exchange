@@ -1,4 +1,13 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.service;
+
+import com.example.cryptoexchange.model.User;
+import com.example.cryptoexchange.model.UserRole;
+import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;

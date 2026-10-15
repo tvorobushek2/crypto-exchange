@@ -1,4 +1,9 @@
-package com.example.cryptoexchange;
+package com.example.cryptoexchange.service;
+
+import com.example.cryptoexchange.model.User;
+import com.example.cryptoexchange.model.UserRole;
+import java.util.List;
+import java.util.Optional;
 
 import java.util.List;
 import java.util.Optional;
