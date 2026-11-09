@@ -2,60 +2,43 @@ package com.example.cryptoexchange.service;
 
 import com.example.cryptoexchange.model.User;
 import com.example.cryptoexchange.model.UserRole;
+import com.example.cryptoexchange.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private final List<User> users = new ArrayList<>();
-    private final Map<Long, User> userMap = new HashMap<>();
-    private long nextId = 1L;
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public User addUser(User user) {
-        user.setId(nextId++);
-        users.add(user);
-        userMap.put(user.getId(), user);
-        return user;
+        return userRepository.save(user);
     }
 
     @Override
     public Optional<User> getUserById(Long id) {
-        return Optional.ofNullable(userMap.get(id));
+        return userRepository.findById(id);
     }
 
     @Override
     public List<User> getAllUsers() {
-        return new ArrayList<>(users);
+        return userRepository.findAll();
     }
 
     @Override
     public List<User> findUsersByRole(UserRole role) {
-        List<User> result = new ArrayList<>();
-        for (User user : users) {
-            if (user.getRole() == role) {
-                result.add(user);
-            }
-        }
-        return result;
+        return userRepository.findByRole(role);
     }
 
     @Override
     public boolean deleteUser(Long id) {
-        User removed = userMap.remove(id);
-        if (removed != null) {
-            users.remove(removed);
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
             return true;
         }
         return false;
@@ -63,8 +46,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void displayUsers() {
-        for (User user : users) {
-            System.out.println(user.toString());
-        }
+        userRepository.findAll().forEach(System.out::println);
     }
 }

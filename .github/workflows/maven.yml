@@ -2,9 +2,15 @@ name: Java CI with Maven
 
 on:
   push:
+<<<<<<< HEAD
     branches: [ "main", "feature/lab-1" ]
   pull_request:
     branches: [ "main" ]
+=======
+    branches: [ "feature/lab-1", "master" ]
+  pull_request:
+    branches: [ "master" ]
+>>>>>>> 9883c64 (Add GitHub Actions CI pipeline)
 
 jobs:
   build:

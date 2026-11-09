@@ -2,71 +2,48 @@ package com.example.cryptoexchange.service;
 
 import com.example.cryptoexchange.model.Order;
 import com.example.cryptoexchange.model.OrderType;
+import com.example.cryptoexchange.repository.OrderRepository;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-    private final List<Order> orders = new ArrayList<>();
-    private final Map<Long, Order> orderMap = new HashMap<>();
-    private long nextId = 1L;
+    private final OrderRepository orderRepository;
+
+    public OrderServiceImpl(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
 
     @Override
     public Order addOrder(Order order) {
-        order.setId(nextId++);
-        orders.add(order);
-        orderMap.put(order.getId(), order);
-        return order;
+        return orderRepository.save(order);
     }
 
     @Override
     public Optional<Order> getOrderById(Long id) {
-        return Optional.ofNullable(orderMap.get(id));
+        return orderRepository.findById(id);
     }
 
     @Override
     public List<Order> getAllOrders() {
-        return new ArrayList<>(orders);
+        return orderRepository.findAll();
     }
 
     @Override
     public List<Order> findOrdersBySymbol(String symbol) {
-        List<Order> result = new ArrayList<>();
-        for (Order order : orders) {
-            if (order.getCryptoSymbol().equalsIgnoreCase(symbol)) {
-                result.add(order);
-            }
-        }
-        return result;
+        return orderRepository.findByCryptoSymbolIgnoreCase(symbol);
     }
 
     @Override
     public List<Order> findOrdersByType(OrderType type) {
-        List<Order> result = new ArrayList<>();
-        for (Order order : orders) {
-            if (order.getType() == type) {
-                result.add(order);
-            }
-        }
-        return result;
+        return orderRepository.findByType(type);
     }
 
     @Override
     public boolean deleteOrder(Long id) {
-        Order removed = orderMap.remove(id);
-        if (removed != null) {
-            orders.remove(removed);
+        if (orderRepository.existsById(id)) {
+            orderRepository.deleteById(id);
             return true;
         }
         return false;
