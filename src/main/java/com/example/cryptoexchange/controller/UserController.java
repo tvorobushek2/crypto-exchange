@@ -1,7 +1,7 @@
 package com.example.cryptoexchange.controller;
 
-import com.example.cryptoexchange.model.User;
-import com.example.cryptoexchange.model.UserRole;
+import com.example.cryptoexchange.dto.UserDto;
+import com.example.cryptoexchange.model.*;
 import com.example.cryptoexchange.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +19,26 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.addUser(user));
+    public ResponseEntity<User> createUser(@RequestBody UserDto dto) {
+        User user;
+        UserRole role = UserRole.valueOf(dto.getRole().toUpperCase());
+
+        switch (role) {
+            case ADMIN:
+                user = new AdminUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword());
+                break;
+            case MANAGER:
+                user = new ManagerUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getDepartment());
+                break;
+            case CUSTOMER:
+                user = new CustomerUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getWalletBalance() != null ? dto.getWalletBalance() : 0.0);
+                break;
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        User saved = userService.addUser(user);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping
@@ -36,8 +54,9 @@ public class UserController {
     }
 
     @GetMapping("/role/{role}")
-    public ResponseEntity<List<User>> getUsersByRole(@PathVariable UserRole role) {
-        return ResponseEntity.ok(userService.findUsersByRole(role));
+    public ResponseEntity<List<User>> getUsersByRole(@PathVariable String role) {
+        UserRole userRole = UserRole.valueOf(role.toUpperCase());
+        return ResponseEntity.ok(userService.findUsersByRole(userRole));
     }
 
     @DeleteMapping("/{id}")
