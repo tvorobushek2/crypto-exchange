@@ -1,11 +1,28 @@
 package com.example.cryptoexchange.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "dtype")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = AdminUser.class, name = "ADMIN"),
+    @JsonSubTypes.Type(value = ManagerUser.class, name = "MANAGER"),
+    @JsonSubTypes.Type(value = CustomerUser.class, name = "CUSTOMER")
+})
 public abstract class User {
 
     @Id
@@ -14,34 +31,10 @@ public abstract class User {
 
     private String username;
     private String email;
+
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
-
-    public User() {}
-
-    public User(Long id, String username, String email, String password, UserRole role) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    public UserRole getRole() { return role; }
-    public void setRole(UserRole role) { this.role = role; }
-
-    @Override
-    public String toString() {
-        return "User{id=" + id + ", username='" + username + "', email='" + email + "', role=" + role + "}";
-    }
 }

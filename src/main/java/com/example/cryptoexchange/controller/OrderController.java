@@ -2,9 +2,10 @@ package com.example.cryptoexchange.controller;
 
 import com.example.cryptoexchange.dto.OrderDto;
 import com.example.cryptoexchange.model.Order;
-import com.example.cryptoexchange.model.OrderType;
 import com.example.cryptoexchange.model.OrderStatus;
+import com.example.cryptoexchange.model.OrderType;
 import com.example.cryptoexchange.service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,18 +22,32 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderDto dto) {
-        Order order = new Order(
-                null,
-                dto.getUserId(),
-                dto.getCryptoSymbol(),
-                dto.getAmount(),
-                dto.getPrice(),
-                OrderType.valueOf(dto.getType().toUpperCase()),
-                dto.getStatus() != null ? OrderStatus.valueOf(dto.getStatus().toUpperCase()) : OrderStatus.PENDING
-        );
-        Order saved = orderService.addOrder(order);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderDto dto) {
+        Order order = Order.builder()
+                .userId(dto.getUserId())
+                .cryptoSymbol(dto.getCryptoSymbol())
+                .amount(dto.getAmount())
+                .price(dto.getPrice())
+                .type(OrderType.valueOf(dto.getType().toUpperCase()))
+                .status(dto.getStatus() != null
+                        ? OrderStatus.valueOf(dto.getStatus().toUpperCase())
+                        : OrderStatus.PENDING)
+                .build();
+        return ResponseEntity.ok(orderService.addOrder(order));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderDto dto) {
+        Order order = Order.builder()
+                .cryptoSymbol(dto.getCryptoSymbol())
+                .amount(dto.getAmount())
+                .price(dto.getPrice())
+                .type(OrderType.valueOf(dto.getType().toUpperCase()))
+                .status(dto.getStatus() != null
+                        ? OrderStatus.valueOf(dto.getStatus().toUpperCase())
+                        : OrderStatus.PENDING)
+                .build();
+        return ResponseEntity.ok(orderService.updateOrder(id, order));
     }
 
     @GetMapping

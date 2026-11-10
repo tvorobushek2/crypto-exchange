@@ -3,6 +3,7 @@ package com.example.cryptoexchange.controller;
 import com.example.cryptoexchange.dto.UserDto;
 import com.example.cryptoexchange.model.*;
 import com.example.cryptoexchange.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,26 +20,16 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody UserDto dto) {
-        User user;
-        UserRole role = UserRole.valueOf(dto.getRole().toUpperCase());
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserDto dto) {
+        User user = createUserByRole(dto);
+        return ResponseEntity.ok(userService.addUser(user));
+    }
 
-        switch (role) {
-            case ADMIN:
-                user = new AdminUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword());
-                break;
-            case MANAGER:
-                user = new ManagerUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getDepartment());
-                break;
-            case CUSTOMER:
-                user = new CustomerUser(null, dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getWalletBalance() != null ? dto.getWalletBalance() : 0.0);
-                break;
-            default:
-                return ResponseEntity.badRequest().build();
-        }
-
-        User saved = userService.addUser(user);
-        return ResponseEntity.ok(saved);
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto dto) {
+        User user = createUserByRole(dto);
+        user.setId(id);
+        return ResponseEntity.ok(userService.updateUser(id, user));
     }
 
     @GetMapping
@@ -65,5 +56,15 @@ public class UserController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private User createUserByRole(UserDto dto) {
+        UserRole role = UserRole.valueOf(dto.getRole().toUpperCase());
+        return switch (role) {
+            case ADMIN -> new AdminUser(dto.getUsername(), dto.getEmail(), dto.getPassword());
+            case MANAGER -> new ManagerUser(dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getDepartment());
+            case CUSTOMER -> new CustomerUser(dto.getUsername(), dto.getEmail(), dto.getPassword(),
+                    dto.getWalletBalance() != null ? dto.getWalletBalance() : 0.0);
+        };
     }
 }
