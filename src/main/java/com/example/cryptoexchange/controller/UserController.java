@@ -1,9 +1,9 @@
 package com.example.cryptoexchange.controller;
 
 import com.example.cryptoexchange.dto.UserDto;
-import com.example.cryptoexchange.model.*;
+import com.example.cryptoexchange.model.User;
+import com.example.cryptoexchange.model.UserRole;
 import com.example.cryptoexchange.service.UserService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,21 +14,22 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserRequestMapper userMapper;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRequestMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody UserDto dto) {
-        User user = createUserByRole(dto);
+    public ResponseEntity<User> createUser(@RequestBody UserDto dto) {
+        User user = userMapper.toEntity(dto);
         return ResponseEntity.ok(userService.addUser(user));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto dto) {
-        User user = createUserByRole(dto);
-        user.setId(id);
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserDto dto) {
+        User user = userMapper.toEntity(dto);
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
 
@@ -39,9 +40,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userService.getUserOrThrow(id));
     }
 
     @GetMapping("/role/{role}")
@@ -52,19 +51,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (userService.deleteUser(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    private User createUserByRole(UserDto dto) {
-        UserRole role = UserRole.valueOf(dto.getRole().toUpperCase());
-        return switch (role) {
-            case ADMIN -> new AdminUser(dto.getUsername(), dto.getEmail(), dto.getPassword());
-            case MANAGER -> new ManagerUser(dto.getUsername(), dto.getEmail(), dto.getPassword(), dto.getDepartment());
-            case CUSTOMER -> new CustomerUser(dto.getUsername(), dto.getEmail(), dto.getPassword(),
-                    dto.getWalletBalance() != null ? dto.getWalletBalance() : 0.0);
-        };
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

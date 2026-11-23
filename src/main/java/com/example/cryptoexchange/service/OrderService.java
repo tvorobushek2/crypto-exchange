@@ -10,6 +10,7 @@ public interface OrderService {
     Order addOrder(Order order);
     Order updateOrder(Long id, Order order);
     Optional<Order> getOrderById(Long id);
+    Order getOrderOrThrow(Long id);
     List<Order> getAllOrders();
     List<Order> findOrdersBySymbol(String symbol);
     List<Order> findOrdersByType(OrderType type);

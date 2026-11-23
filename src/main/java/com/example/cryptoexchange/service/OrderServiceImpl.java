@@ -1,8 +1,14 @@
 package com.example.cryptoexchange.service;
 
+import com.example.cryptoexchange.exception.InsufficientBalanceException;
+import com.example.cryptoexchange.exception.OrderNotFoundException;
+import com.example.cryptoexchange.exception.UserNotFoundException;
+import com.example.cryptoexchange.model.CustomerUser;
 import com.example.cryptoexchange.model.Order;
 import com.example.cryptoexchange.model.OrderType;
+import com.example.cryptoexchange.model.User;
 import com.example.cryptoexchange.repository.OrderRepository;
+import com.example.cryptoexchange.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,33 +18,50 @@ import java.util.Optional;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository) {
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
     public Order addOrder(Order order) {
+        User user = userRepository.findById(order.getUserId())
+                .orElseThrow(() -> new UserNotFoundException(order.getUserId()));
+
+        if (order.getType() == OrderType.BUY && user instanceof CustomerUser) {
+            CustomerUser customer = (CustomerUser) user;
+            double total = order.getAmount() * order.getPrice();
+            if (customer.getWalletBalance() < total) {
+                throw new InsufficientBalanceException(user.getId(), total, customer.getWalletBalance());
+            }
+        }
+
         return orderRepository.save(order);
     }
 
     @Override
     public Order updateOrder(Long id, Order order) {
-        return orderRepository.findById(id)
-                .map(existing -> {
-                    existing.setCryptoSymbol(order.getCryptoSymbol());
-                    existing.setAmount(order.getAmount());
-                    existing.setPrice(order.getPrice());
-                    existing.setType(order.getType());
-                    existing.setStatus(order.getStatus());
-                    return orderRepository.save(existing);
-                })
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        Order existing = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+        existing.setCryptoSymbol(order.getCryptoSymbol());
+        existing.setAmount(order.getAmount());
+        existing.setPrice(order.getPrice());
+        existing.setType(order.getType());
+        existing.setStatus(order.getStatus());
+        return orderRepository.save(existing);
     }
 
     @Override
     public Optional<Order> getOrderById(Long id) {
         return orderRepository.findById(id);
+    }
+
+    @Override
+    public Order getOrderOrThrow(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
     }
 
     @Override
@@ -62,6 +85,6 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.deleteById(id);
             return true;
         }
-        return false;
+        throw new OrderNotFoundException(id);
     }
 }

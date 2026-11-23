@@ -5,7 +5,6 @@ import com.example.cryptoexchange.model.Order;
 import com.example.cryptoexchange.model.OrderStatus;
 import com.example.cryptoexchange.model.OrderType;
 import com.example.cryptoexchange.service.OrderService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,37 +15,22 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderRequestMapper orderMapper;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, OrderRequestMapper orderMapper) {
         this.orderService = orderService;
+        this.orderMapper = orderMapper;
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderDto dto) {
-        Order order = Order.builder()
-                .userId(dto.getUserId())
-                .cryptoSymbol(dto.getCryptoSymbol())
-                .amount(dto.getAmount())
-                .price(dto.getPrice())
-                .type(OrderType.valueOf(dto.getType().toUpperCase()))
-                .status(dto.getStatus() != null
-                        ? OrderStatus.valueOf(dto.getStatus().toUpperCase())
-                        : OrderStatus.PENDING)
-                .build();
+    public ResponseEntity<Order> createOrder(@RequestBody OrderDto dto) {
+        Order order = orderMapper.toEntity(dto);
         return ResponseEntity.ok(orderService.addOrder(order));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderDto dto) {
-        Order order = Order.builder()
-                .cryptoSymbol(dto.getCryptoSymbol())
-                .amount(dto.getAmount())
-                .price(dto.getPrice())
-                .type(OrderType.valueOf(dto.getType().toUpperCase()))
-                .status(dto.getStatus() != null
-                        ? OrderStatus.valueOf(dto.getStatus().toUpperCase())
-                        : OrderStatus.PENDING)
-                .build();
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody OrderDto dto) {
+        Order order = orderMapper.toEntity(dto);
         return ResponseEntity.ok(orderService.updateOrder(id, order));
     }
 
@@ -57,9 +41,7 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        return orderService.getOrderById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(orderService.getOrderOrThrow(id));
     }
 
     @GetMapping("/symbol/{symbol}")
@@ -75,9 +57,7 @@ public class OrderController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        if (orderService.deleteOrder(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
     }
 }

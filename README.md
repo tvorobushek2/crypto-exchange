@@ -1,41 +1,21 @@
-# Система управления криптобиржей (Lab 2)
+## Обработка исключений (Lab 3)
 
-## Описание проекта
-REST-сервис для управления пользователями и торговыми заявками криптобиржи.
-Разработан на Java с использованием Spring Boot, Spring Data JPA и PostgreSQL.
-Реализован паттерн MVC.
+Реализован пакет `exception` с собственными классами исключений:
+- `UserNotFoundException` — 404 Not Found
+- `UserAlreadyExistsException` — 409 Conflict
+- `InvalidUserDataException` — 400 Bad Request
+- `OrderNotFoundException` — 404 Not Found
+- `InvalidOrderDataException` — 400 Bad Request
+- `InsufficientBalanceException` — 400 Bad Request
 
-## Пакеты проекта
-- `model` — JPA-сущности с наследованием (`@Inheritance`)
-- `dto` — DTO-объекты для передачи данных с валидацией
-- `repository` — интерфейсы Spring Data JPA
-- `service` — бизнес-логика (интерфейсы + реализации)
-- `controller` — REST-контроллеры
+Глобальный обработчик `GlobalExceptionHandler` (пакет `exception.handler`)
+использует `@RestControllerAdvice` и возвращает единый формат ошибки:
 
-## REST API
-
-### Пользователи (`/api/users`)
-- `POST /api/users` — создать пользователя
-- `PUT /api/users/{id}` — обновить пользователя
-- `GET /api/users` — получить всех пользователей
-- `GET /api/users/{id}` — получить пользователя по ID
-- `GET /api/users/role/{role}` — получить пользователей по роли (фильтрация)
-- `DELETE /api/users/{id}` — удалить пользователя
-
-### Заявки (`/api/orders`)
-- `POST /api/orders` — создать заявку
-- `PUT /api/orders/{id}` — обновить заявку
-- `GET /api/orders` — получить все заявки
-- `GET /api/orders/{id}` — получить заявку по ID
-- `GET /api/orders/symbol/{symbol}` — получить заявки по символу (фильтрация)
-- `GET /api/orders/type/{type}` — получить заявки по типу (фильтрация)
-- `DELETE /api/orders/{id}` — удалить заявку
-
-## Технологии
-- Java 17
-- Spring Boot 3.2.0
-- Spring Data JPA
-- PostgreSQL
-- Lombok
-- H2 (для тестов)
-- Mockito + @SpringBootTest
+```json
+{
+  "timestamp": "2026-11-10T14:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Пользователь с ID 999 не найден. Проверьте правильность ID.",
+  "path": "/api/users/999"
+}

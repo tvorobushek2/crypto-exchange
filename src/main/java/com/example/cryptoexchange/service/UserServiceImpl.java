@@ -1,5 +1,7 @@
 package com.example.cryptoexchange.service;
 
+import com.example.cryptoexchange.exception.UserAlreadyExistsException;
+import com.example.cryptoexchange.exception.UserNotFoundException;
 import com.example.cryptoexchange.model.User;
 import com.example.cryptoexchange.model.UserRole;
 import com.example.cryptoexchange.repository.UserRepository;
@@ -19,24 +21,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addUser(User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException(user.getEmail());
+        }
         return userRepository.save(user);
     }
 
     @Override
     public User updateUser(Long id, User user) {
-        return userRepository.findById(id)
-                .map(existing -> {
-                    existing.setUsername(user.getUsername());
-                    existing.setEmail(user.getEmail());
-                    existing.setRole(user.getRole());
-                    return userRepository.save(existing);
-                })
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        User existing = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        existing.setUsername(user.getUsername());
+        existing.setEmail(user.getEmail());
+        return userRepository.save(existing);
     }
 
     @Override
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
+    }
+
+    @Override
+    public User getUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
@@ -55,7 +63,7 @@ public class UserServiceImpl implements UserService {
             userRepository.deleteById(id);
             return true;
         }
-        return false;
+        throw new UserNotFoundException(id);
     }
 
     @Override

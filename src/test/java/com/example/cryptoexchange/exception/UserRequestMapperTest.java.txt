@@ -1,0 +1,73 @@
+package com.example.cryptoexchange.controller;
+
+import com.example.cryptoexchange.dto.UserDto;
+import com.example.cryptoexchange.exception.InvalidUserDataException;
+import com.example.cryptoexchange.model.User;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class UserRequestMapperTest {
+
+    private final UserRequestMapper mapper = new UserRequestMapper();
+
+    @Test
+    public void testValidCustomer() {
+        UserDto dto = new UserDto();
+        dto.setUsername("trader");
+        dto.setEmail("t@t.com");
+        dto.setPassword("secret123");
+        dto.setRole("CUSTOMER");
+        dto.setWalletBalance(1000.0);
+
+        User user = mapper.toEntity(dto);
+        assertNotNull(user);
+    }
+
+    @Test
+    public void testMissingUsernameThrows() {
+        UserDto dto = new UserDto();
+        dto.setEmail("t@t.com");
+        dto.setPassword("secret123");
+        dto.setRole("CUSTOMER");
+        dto.setWalletBalance(1000.0);
+
+        assertThrows(InvalidUserDataException.class, () -> mapper.toEntity(dto));
+    }
+
+    @Test
+    public void testShortPasswordThrows() {
+        UserDto dto = new UserDto();
+        dto.setUsername("trader");
+        dto.setEmail("t@t.com");
+        dto.setPassword("123");
+        dto.setRole("CUSTOMER");
+        dto.setWalletBalance(1000.0);
+
+        assertThrows(InvalidUserDataException.class, () -> mapper.toEntity(dto));
+    }
+
+    @Test
+    public void testInvalidRoleThrows() {
+        UserDto dto = new UserDto();
+        dto.setUsername("trader");
+        dto.setEmail("t@t.com");
+        dto.setPassword("secret123");
+        dto.setRole("SUPERUSER");
+        dto.setWalletBalance(1000.0);
+
+        assertThrows(InvalidUserDataException.class, () -> mapper.toEntity(dto));
+    }
+
+    @Test
+    public void testNegativeBalanceThrows() {
+        UserDto dto = new UserDto();
+        dto.setUsername("trader");
+        dto.setEmail("t@t.com");
+        dto.setPassword("secret123");
+        dto.setRole("CUSTOMER");
+        dto.setWalletBalance(-10.0);
+
+        assertThrows(InvalidUserDataException.class, () -> mapper.toEntity(dto));
+    }
+}

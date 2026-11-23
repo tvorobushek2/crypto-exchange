@@ -14,4 +14,5 @@ public interface UserService {
     List<User> findUsersByRole(UserRole role);
     boolean deleteUser(Long id);
     void displayUsers();
+    User getUserOrThrow(Long id);
 }
